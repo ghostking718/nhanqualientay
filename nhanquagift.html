@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Nhận Quà 🎁</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fff3f6;
+      text-align: center;
+      padding: 50px;
+    }
+    #giftBox {
+      width: 200px;
+      height: 200px;
+      margin: auto;
+      background: pink;
+      border-radius: 20px;
+      cursor: pointer;
+      line-height: 200px;
+      font-size: 2em;
+      color: white;
+      box-shadow: 0 0 20px #e91e63;
+      transition: transform 0.5s;
+    }
+    #giftBox.opened {
+      transform: scale(1.1);
+      background: #e91e63;
+    }
+    #giftContent {
+      margin-top: 30px;
+      display: none;
+    }
+    #giftContent.show {
+      display: block;
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <h1>💝 Hộp quà bí mật</h1>
+  <div id="message"></div>
+  <div id="giftBox">🎁</div>
+  <div id="giftContent">
+    <h2 id="giftName"></h2>
+    <p id="giftDesc"></p>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+
+    const giftBox = document.getElementById('giftBox');
+    const giftContent = document.getElementById('giftContent');
+    const giftName = document.getElementById('giftName');
+    const giftDesc = document.getElementById('giftDesc');
+    const message = document.getElementById('message');
+
+    if (!code) {
+      message.textContent = "😥 Không có mã!";
+      giftBox.style.display = 'none';
+    } else {
+      const codeRef = db.ref('giftCodes/' + code);
+      codeRef.get().then((snapshot) => {
+        if (!snapshot.exists()) {
+          message.textContent = "😓 Mã không hợp lệ!";
+          giftBox.style.display = 'none';
+        } else {
+          const gift = snapshot.val();
+          if (gift.used) {
+            message.textContent = "😢 Mã này đã được sử dụng rồi!";
+            giftBox.style.display = 'none';
+          } else {
+            giftBox.addEventListener('click', () => {
+              giftBox.classList.add('opened');
+              giftName.textContent = gift.name;
+              giftDesc.textContent = gift.desc;
+              giftContent.classList.add('show');
+              codeRef.update({ used: true });
+            });
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
