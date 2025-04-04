@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Tạo Mã Quà</title>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <h1>🎁 Tạo & Gửi Mã Quà</h1>
+  <input id="giftName" placeholder="Tên quà">
+  <textarea id="giftDesc" placeholder="Chi tiết quà"></textarea>
+  <input id="email" type="email" placeholder="Email người nhận">
+  <button onclick="createAndSend()">Tạo mã & Gửi</button>
+  <div id="result"></div>
+
+  <script>
+    emailjs.init("YOUR_EMAILJS_USER_ID");
+
+    function generateCode(length = 8) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    }
+
+    function createAndSend() {
+      const name = document.getElementById('giftName').value.trim();
+      const desc = document.getElementById('giftDesc').value.trim();
+      const email = document.getElementById('email').value.trim();
+
+      if (!name || !desc || !email) {
+        alert("Điền đầy đủ thông tin nha!");
+        return;
+      }
+
+      const code = generateCode();
+      const link = `https://monquadanhriengem.netlify.app/nhanquagift.html?code=${code}`;
+
+      db.ref('giftCodes/' + code).set({ name, desc, used: false }).then(() => {
+        return emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
+          to_email: email,
+          gift_name: name,
+          gift_desc: desc,
+          gift_link: link
+        });
+      }).then(() => {
+        document.getElementById('result').innerHTML = `Mã: <b>${code}</b><br><a href='${link}' target='_blank'>${link}</a>`;
+      }).catch(err => {
+        alert("Lỗi khi gửi mã: " + err);
+      });
+    }
+  </script>
+</body>
+</html>
